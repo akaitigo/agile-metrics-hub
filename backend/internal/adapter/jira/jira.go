@@ -271,14 +271,14 @@ func convertJiraIssue(issue jiraIssue, projectID, storyPointsField string) model
 		task.Priority = issue.Fields.Priority.Name
 	}
 
-	if t, err := time.Parse("2006-01-02T15:04:05.000-0700", issue.Fields.Created); err == nil {
+	if t, err := parseJiraDate(issue.Fields.Created); err == nil {
 		task.CreatedAt = t
 	}
-	if t, err := time.Parse("2006-01-02T15:04:05.000-0700", issue.Fields.Updated); err == nil {
+	if t, err := parseJiraDate(issue.Fields.Updated); err == nil {
 		task.UpdatedAt = t
 	}
 	if issue.Fields.Resolutiondate != nil {
-		if t, err := time.Parse("2006-01-02T15:04:05.000-0700", *issue.Fields.Resolutiondate); err == nil {
+		if t, err := parseJiraDate(*issue.Fields.Resolutiondate); err == nil {
 			task.CompletedAt = &t
 		}
 	}
@@ -322,10 +322,10 @@ func (a *Adapter) FetchSprints(ctx context.Context, projectID string) ([]model.S
 				Name:       s.Name,
 				Status:     mapJiraSprintState(s.State),
 			}
-			if t, err := time.Parse("2006-01-02T15:04:05.000Z", s.StartDate); err == nil {
+			if t, err := parseJiraDate(s.StartDate); err == nil {
 				sprint.StartDate = t
 			}
-			if t, err := time.Parse("2006-01-02T15:04:05.000Z", s.EndDate); err == nil {
+			if t, err := parseJiraDate(s.EndDate); err == nil {
 				sprint.EndDate = t
 			}
 			sprints = append(sprints, sprint)
@@ -383,7 +383,7 @@ func (a *Adapter) FetchTaskHistory(ctx context.Context, taskID string) ([]model.
 				if item.Field != "status" {
 					continue
 				}
-				ts, err := time.Parse("2006-01-02T15:04:05.000-0700", entry.Created)
+				ts, err := parseJiraDate(entry.Created)
 				if err != nil {
 					continue
 				}
@@ -403,4 +403,20 @@ func (a *Adapter) FetchTaskHistory(ctx context.Context, taskID string) ([]model.
 		startAt += len(resp.Values)
 	}
 	return events, nil
+}
+
+// parseJiraDate は複数のJira日付フォーマットを試行する。
+func parseJiraDate(s string) (time.Time, error) {
+	formats := []string{
+		"2006-01-02T15:04:05.000-0700",
+		"2006-01-02T15:04:05.000Z",
+		"2006-01-02T15:04:05.000+0000",
+		time.RFC3339,
+	}
+	for _, f := range formats {
+		if t, err := time.Parse(f, s); err == nil {
+			return t, nil
+		}
+	}
+	return time.Time{}, fmt.Errorf("unable to parse date: %q", s)
 }

@@ -217,6 +217,19 @@ func TestConnections_TestConnection_MissingFields(t *testing.T) {
 	}
 }
 
+func TestConnections_TestConnection_InvalidSourceFormat(t *testing.T) {
+	h := &handler.ConnectionsHandler{Registry: adapter.NewRegistry()}
+	body := `{"source":"click;up","display_name":"test","api_key":"key123"}`
+	req := httptest.NewRequest(http.MethodPost, "/api/connections/test", strings.NewReader(body))
+	rec := httptest.NewRecorder()
+
+	h.TestConnection(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for invalid source format, got %d", rec.Code)
+	}
+}
+
 func TestConnections_TestConnection_UnsupportedSource(t *testing.T) {
 	h := &handler.ConnectionsHandler{Registry: adapter.NewRegistry()}
 	body := `{"source":"trello","display_name":"test","api_key":"key123"}`
