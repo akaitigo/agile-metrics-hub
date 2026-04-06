@@ -11,6 +11,7 @@ import (
 
 var (
 	ErrHistoryNotSupported = errors.New("task history API not supported by this adapter")
+	ErrSprintsNotSupported = errors.New("sprints not supported by this adapter")
 	ErrRateLimited         = errors.New("rate limit exceeded")
 	ErrUnauthorized        = errors.New("invalid API credentials")
 	ErrNotFound            = errors.New("resource not found")
