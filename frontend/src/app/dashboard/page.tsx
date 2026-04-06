@@ -19,16 +19,20 @@ export default function DashboardPage() {
 	useEffect(() => {
 		async function loadMetrics() {
 			try {
-				const [bd, vel, cf, lt] = await Promise.all([
+				const results = await Promise.allSettled([
 					fetchAPI<BurndownPoint[]>("/api/metrics/burndown?project_id=demo"),
 					fetchAPI<VelocityResponse>("/api/metrics/velocity?count=5"),
 					fetchAPI<CumulativeFlowPoint[]>("/api/metrics/cumulative-flow?days=30"),
 					fetchAPI<LeadTimeStats>("/api/metrics/lead-time?project_id=demo"),
 				]);
-				setBurndown(bd);
-				setVelocity(vel);
-				setCumulativeFlow(cf);
-				setLeadTime(lt);
+				if (results[0]?.status === "fulfilled") setBurndown(results[0].value);
+				if (results[1]?.status === "fulfilled") setVelocity(results[1].value);
+				if (results[2]?.status === "fulfilled") setCumulativeFlow(results[2].value);
+				if (results[3]?.status === "fulfilled") setLeadTime(results[3].value);
+				const failed = results.filter((r) => r.status === "rejected");
+				if (failed.length === results.length) {
+					setError("Failed to load all metrics");
+				}
 			} catch (e) {
 				setError(e instanceof Error ? e.message : "Failed to load metrics");
 			} finally {

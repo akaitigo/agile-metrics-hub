@@ -56,11 +56,11 @@ func main() {
 	mux.HandleFunc("GET /api/metrics/lead-time", metricsHandler.LeadTime)
 
 	// Security + CORS middleware
-	handler := securityMiddleware(mux, corsOrigin)
+	middlewareChain := securityMiddleware(mux, corsOrigin)
 
 	server := &http.Server{
 		Addr:              ":" + port,
-		Handler:           handler,
+		Handler:           middlewareChain,
 		ReadTimeout:       10 * time.Second,
 		ReadHeaderTimeout: 5 * time.Second,
 		WriteTimeout:      30 * time.Second,
@@ -81,7 +81,7 @@ func main() {
 	select {
 	case sig := <-quit:
 		log.Printf("received signal %v, shutting down gracefully...", sig)
-		ctx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 35*time.Second)
 		defer cancel()
 		if err := server.Shutdown(ctx); err != nil {
 			log.Fatalf("graceful shutdown failed: %v", err)
