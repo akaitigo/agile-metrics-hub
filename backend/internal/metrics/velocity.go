@@ -24,7 +24,7 @@ func CalculateVelocity(sprints []SprintData) []model.VelocityPoint {
 
 // AverageVelocity は直近Nスプリントの平均ベロシティを計算する。
 func AverageVelocity(sprints []SprintData, n int) float64 {
-	if len(sprints) == 0 {
+	if len(sprints) == 0 || n <= 0 {
 		return 0
 	}
 	if n > len(sprints) {

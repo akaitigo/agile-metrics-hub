@@ -75,6 +75,16 @@ func TestAverageVelocity(t *testing.T) {
 	if avgAll != 20 {                              // (10+20+30)/3
 		t.Errorf("expected 20, got %f", avgAll)
 	}
+
+	avgZero := metrics.AverageVelocity(sprints, 0)
+	if avgZero != 0 {
+		t.Errorf("expected 0 for n=0, got %f", avgZero)
+	}
+
+	avgNeg := metrics.AverageVelocity(sprints, -1)
+	if avgNeg != 0 {
+		t.Errorf("expected 0 for n=-1, got %f", avgNeg)
+	}
 }
 
 func TestCalculateLeadTime(t *testing.T) {

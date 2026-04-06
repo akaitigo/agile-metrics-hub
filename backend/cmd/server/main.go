@@ -1,10 +1,13 @@
 package main
 
 import (
+	"context"
 	"io"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/akaitigo/agile-metrics-hub/internal/adapter"
@@ -65,9 +68,29 @@ func main() {
 		MaxHeaderBytes:    1 << 20, // 1MB
 	}
 
-	log.Printf("Agile Metrics Hub API listening on :%s", port)
-	if err := server.ListenAndServe(); err != nil {
-		log.Fatalf("server failed: %v", err)
+	// Graceful shutdown: SIGTERM/SIGINT を受けたら in-flight リクエストを完了してから停止
+	errCh := make(chan error, 1)
+	go func() {
+		log.Printf("Agile Metrics Hub API listening on :%s", port)
+		errCh <- server.ListenAndServe()
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
+
+	select {
+	case sig := <-quit:
+		log.Printf("received signal %v, shutting down gracefully...", sig)
+		ctx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
+		defer cancel()
+		if err := server.Shutdown(ctx); err != nil {
+			log.Fatalf("graceful shutdown failed: %v", err)
+		}
+		log.Println("server stopped")
+	case err := <-errCh:
+		if err != nil && err != http.ErrServerClosed {
+			log.Fatalf("server failed: %v", err)
+		}
 	}
 }
 
