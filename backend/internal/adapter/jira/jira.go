@@ -84,7 +84,8 @@ func (a *Adapter) doRequest(ctx context.Context, method, path string) ([]byte, e
 	}
 	defer func() { _ = resp.Body.Close() }()
 
-	body, err := io.ReadAll(resp.Body)
+	const maxResponseSize = 10 << 20 // 10MB
+	body, err := io.ReadAll(io.LimitReader(resp.Body, maxResponseSize))
 	if err != nil {
 		return nil, fmt.Errorf("read response: %w", err)
 	}
@@ -99,7 +100,7 @@ func (a *Adapter) doRequest(ctx context.Context, method, path string) ([]byte, e
 	case http.StatusNotFound:
 		return nil, adapter.ErrNotFound
 	default:
-		return nil, fmt.Errorf("jira API error: %d %s", resp.StatusCode, string(body))
+		return nil, fmt.Errorf("jira API error: status %d", resp.StatusCode)
 	}
 }
 
