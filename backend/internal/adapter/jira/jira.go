@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
+	"strings"
 	"time"
 
 	"github.com/akaitigo/agile-metrics-hub/internal/adapter"
@@ -28,12 +30,32 @@ func NewAdapter(apiToken string, config map[string]string) (adapter.PMToolAdapte
 	if apiToken == "" || baseURL == "" || email == "" {
 		return nil, adapter.ErrUnauthorized
 	}
+	if err := validateBaseURL(baseURL); err != nil {
+		return nil, fmt.Errorf("invalid base_url: %w", err)
+	}
 	return &Adapter{
-		baseURL:  baseURL,
+		baseURL:  strings.TrimRight(baseURL, "/"),
 		email:    email,
 		apiToken: apiToken,
 		client:   &http.Client{Timeout: 30 * time.Second},
 	}, nil
+}
+
+// validateBaseURL はSSRF防止のためbase_urlを検証する。
+func validateBaseURL(rawURL string) error {
+	parsed, err := url.Parse(rawURL)
+	if err != nil {
+		return fmt.Errorf("malformed URL: %w", err)
+	}
+	if parsed.Scheme != "https" {
+		return fmt.Errorf("only https is allowed, got %q", parsed.Scheme)
+	}
+	host := parsed.Hostname()
+	// Atlassian Cloud ドメインのみ許可
+	if !strings.HasSuffix(host, ".atlassian.net") {
+		return fmt.Errorf("only *.atlassian.net domains are allowed, got %q", host)
+	}
+	return nil
 }
 
 func (a *Adapter) Name() string { return "jira" }
