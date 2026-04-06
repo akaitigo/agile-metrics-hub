@@ -54,6 +54,31 @@ func TestNewAdapter_SSRF_NonAtlassianBlocked(t *testing.T) {
 	}
 }
 
+func TestNewAdapter_InvalidStoryPointsField(t *testing.T) {
+	_, err := jira.NewAdapter("token", map[string]string{
+		"base_url":           "https://test.atlassian.net",
+		"email":              "test@example.com",
+		"story_points_field": "field;DROP TABLE",
+	})
+	if err == nil {
+		t.Fatal("expected error for invalid field name")
+	}
+}
+
+func TestNewAdapter_ValidStoryPointsField(t *testing.T) {
+	a, err := jira.NewAdapter("token", map[string]string{
+		"base_url":           "https://test.atlassian.net",
+		"email":              "test@example.com",
+		"story_points_field": "customfield_10020",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if a.Name() != "jira" {
+		t.Errorf("expected name 'jira', got %q", a.Name())
+	}
+}
+
 func TestNewAdapter_SSRF_LocalhostBlocked(t *testing.T) {
 	_, err := jira.NewAdapter("token", map[string]string{
 		"base_url": "https://localhost",

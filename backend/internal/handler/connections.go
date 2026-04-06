@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/akaitigo/agile-metrics-hub/internal/adapter"
 )
@@ -50,7 +51,7 @@ func (h *ConnectionsHandler) TestConnection(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	if req.DisplayName == "" || len(req.DisplayName) > 128 {
+	if req.DisplayName == "" || utf8.RuneCountInString(req.DisplayName) > 128 {
 		JSONError(w, http.StatusBadRequest, "display_name is required and must be 128 chars or less")
 		return
 	}
