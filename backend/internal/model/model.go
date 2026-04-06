@@ -12,9 +12,19 @@ type Task struct {
 	Status      string     `json:"status"`
 	Assignee    string     `json:"assignee,omitempty"`
 	StoryPoints *float64   `json:"story_points,omitempty"`
+	Priority    string     `json:"priority,omitempty"`
+	Labels      []string   `json:"labels,omitempty"`
 	CreatedAt   time.Time  `json:"created_at"`
 	UpdatedAt   time.Time  `json:"updated_at"`
 	CompletedAt *time.Time `json:"completed_at,omitempty"`
+}
+
+// Project はPMツールのプロジェクト。
+type Project struct {
+	ID         string `json:"id"`
+	ExternalID string `json:"external_id"`
+	Source     string `json:"source"`
+	Name       string `json:"name"`
 }
 
 // Sprint はスプリントの統一モデル。
@@ -34,15 +44,19 @@ type TaskEvent struct {
 	FromStatus string    `json:"from_status"`
 	ToStatus   string    `json:"to_status"`
 	Timestamp  time.Time `json:"timestamp"`
+	Source     string    `json:"source"` // "api", "webhook", "time_in_status"
 }
 
 // Connection はPMツールへの接続情報。
 type Connection struct {
-	ID        string    `json:"id"`
-	Source    string    `json:"source"`
-	APIKey    string    `json:"-"` // JSONに出力しない
-	ProjectID string    `json:"project_id"`
-	CreatedAt time.Time `json:"created_at"`
+	ID          string            `json:"id"`
+	Source      string            `json:"source"`
+	DisplayName string            `json:"display_name"`
+	APIKey      string            `json:"-"` // JSONに出力しない
+	Config      map[string]string `json:"config,omitempty"`
+	SyncStatus  string            `json:"sync_status"`
+	LastSynced  *time.Time        `json:"last_synced_at,omitempty"`
+	CreatedAt   time.Time         `json:"created_at"`
 }
 
 // BurndownPoint はバーンダウンチャートの1データポイント。
