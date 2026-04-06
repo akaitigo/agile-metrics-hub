@@ -16,10 +16,11 @@ import (
 
 // Adapter はJira Cloud REST API v3のアダプター実装。
 type Adapter struct {
-	baseURL  string
-	email    string
-	apiToken string
-	client   *http.Client
+	baseURL          string
+	email            string
+	apiToken         string
+	storyPointsField string
+	client           *http.Client
 }
 
 // NewAdapter はJiraアダプターを生成する。
@@ -33,11 +34,16 @@ func NewAdapter(apiToken string, config map[string]string) (adapter.PMToolAdapte
 	if err := validateBaseURL(baseURL); err != nil {
 		return nil, fmt.Errorf("invalid base_url: %w", err)
 	}
+	spField := config["story_points_field"]
+	if spField == "" {
+		spField = "customfield_10016"
+	}
 	return &Adapter{
-		baseURL:  strings.TrimRight(baseURL, "/"),
-		email:    email,
-		apiToken: apiToken,
-		client:   &http.Client{Timeout: 30 * time.Second},
+		baseURL:          strings.TrimRight(baseURL, "/"),
+		email:            email,
+		apiToken:         apiToken,
+		storyPointsField: spField,
+		client:           &http.Client{Timeout: 30 * time.Second},
 	}, nil
 }
 
@@ -50,9 +56,12 @@ func validateBaseURL(rawURL string) error {
 	if parsed.Scheme != "https" {
 		return fmt.Errorf("only https is allowed, got %q", parsed.Scheme)
 	}
+	if parsed.User != nil {
+		return fmt.Errorf("userinfo in URL is not allowed")
+	}
 	host := parsed.Hostname()
-	// Atlassian Cloud ドメインのみ許可
-	if !strings.HasSuffix(host, ".atlassian.net") {
+	// Atlassian Cloud ドメインのみ許可（厳密なドメイン照合）
+	if host != "atlassian.net" && !strings.HasSuffix(host, ".atlassian.net") {
 		return fmt.Errorf("only *.atlassian.net domains are allowed, got %q", host)
 	}
 	return nil
@@ -141,30 +150,39 @@ func (a *Adapter) FetchProjects(ctx context.Context) ([]model.Project, error) {
 }
 
 type jiraSearchResponse struct {
-	Issues []jiraIssue `json:"issues"`
-	Total  int         `json:"total"`
+	Issues []jiraIssueRaw `json:"issues"`
+	Total  int            `json:"total"`
+}
+
+// jiraIssueRaw は2段階デシリアライズ用。fields を RawMessage で受ける。
+type jiraIssueRaw struct {
+	ID     string          `json:"id"`
+	Key    string          `json:"key"`
+	Fields json.RawMessage `json:"fields"`
+}
+
+type jiraIssueFields struct {
+	Summary string `json:"summary"`
+	Status  struct {
+		Name string `json:"name"`
+	} `json:"status"`
+	Assignee *struct {
+		DisplayName string `json:"displayName"`
+	} `json:"assignee"`
+	Priority *struct {
+		Name string `json:"name"`
+	} `json:"priority"`
+	Labels         []string `json:"labels"`
+	Created        string   `json:"created"`
+	Updated        string   `json:"updated"`
+	Resolutiondate *string  `json:"resolutiondate"`
 }
 
 type jiraIssue struct {
-	ID     string `json:"id"`
-	Key    string `json:"key"`
-	Fields struct {
-		Summary string `json:"summary"`
-		Status  struct {
-			Name string `json:"name"`
-		} `json:"status"`
-		Assignee *struct {
-			DisplayName string `json:"displayName"`
-		} `json:"assignee"`
-		StoryPoints *float64 `json:"story_points"`
-		Priority    *struct {
-			Name string `json:"name"`
-		} `json:"priority"`
-		Labels         []string `json:"labels"`
-		Created        string   `json:"created"`
-		Updated        string   `json:"updated"`
-		Resolutiondate *string  `json:"resolutiondate"`
-	} `json:"fields"`
+	ID        string
+	Key       string
+	Fields    jiraIssueFields
+	RawFields json.RawMessage
 }
 
 func (a *Adapter) FetchTasks(ctx context.Context, projectID string) ([]model.Task, error) {
@@ -173,8 +191,8 @@ func (a *Adapter) FetchTasks(ctx context.Context, projectID string) ([]model.Tas
 
 	for {
 		body, err := a.doRequest(ctx, http.MethodGet,
-			fmt.Sprintf("/rest/agile/1.0/board/%s/issue?startAt=%d&maxResults=100&fields=summary,status,assignee,story_points,priority,labels,created,updated,resolutiondate",
-				projectID, startAt))
+			fmt.Sprintf("/rest/agile/1.0/board/%s/issue?startAt=%d&maxResults=100&fields=summary,status,assignee,%s,priority,labels,created,updated,resolutiondate",
+				projectID, startAt, a.storyPointsField))
 		if err != nil {
 			return nil, fmt.Errorf("fetch issues: %w", err)
 		}
@@ -184,8 +202,13 @@ func (a *Adapter) FetchTasks(ctx context.Context, projectID string) ([]model.Tas
 			return nil, fmt.Errorf("parse issues: %w", err)
 		}
 
-		for _, issue := range resp.Issues {
-			task := convertJiraIssue(issue, projectID)
+		for _, raw := range resp.Issues {
+			var fields jiraIssueFields
+			if err := json.Unmarshal(raw.Fields, &fields); err != nil {
+				continue
+			}
+			issue := jiraIssue{ID: raw.ID, Key: raw.Key, Fields: fields, RawFields: raw.Fields}
+			task := convertJiraIssue(issue, projectID, a.storyPointsField)
 			allTasks = append(allTasks, task)
 		}
 
@@ -197,7 +220,7 @@ func (a *Adapter) FetchTasks(ctx context.Context, projectID string) ([]model.Tas
 	return allTasks, nil
 }
 
-func convertJiraIssue(issue jiraIssue, projectID string) model.Task {
+func convertJiraIssue(issue jiraIssue, projectID, storyPointsField string) model.Task {
 	task := model.Task{
 		ExternalID: issue.Key,
 		Source:     "jira",
@@ -211,7 +234,18 @@ func convertJiraIssue(issue jiraIssue, projectID string) model.Task {
 		task.Assignee = issue.Fields.Assignee.DisplayName
 	}
 
-	task.StoryPoints = issue.Fields.StoryPoints
+	// ストーリーポイントをカスタムフィールドから動的に取得
+	if issue.RawFields != nil {
+		var fields map[string]json.RawMessage
+		if json.Unmarshal(issue.RawFields, &fields) == nil {
+			if raw, ok := fields[storyPointsField]; ok {
+				var pts float64
+				if json.Unmarshal(raw, &pts) == nil && pts > 0 {
+					task.StoryPoints = &pts
+				}
+			}
+		}
+	}
 
 	if issue.Fields.Priority != nil {
 		task.Priority = issue.Fields.Priority.Name

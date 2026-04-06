@@ -52,12 +52,12 @@ func main() {
 	mux.HandleFunc("GET /api/metrics/cumulative-flow", metricsHandler.CumulativeFlow)
 	mux.HandleFunc("GET /api/metrics/lead-time", metricsHandler.LeadTime)
 
-	// CORS middleware
-	corsHandler := corsMiddleware(mux, corsOrigin)
+	// Security + CORS middleware
+	handler := securityMiddleware(mux, corsOrigin)
 
 	server := &http.Server{
 		Addr:              ":" + port,
-		Handler:           corsHandler,
+		Handler:           handler,
 		ReadTimeout:       10 * time.Second,
 		ReadHeaderTimeout: 5 * time.Second,
 		WriteTimeout:      30 * time.Second,
@@ -71,11 +71,22 @@ func main() {
 	}
 }
 
-func corsMiddleware(next http.Handler, allowOrigin string) http.Handler {
+func securityMiddleware(next http.Handler, allowOrigin string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", allowOrigin)
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		// セキュリティヘッダー
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("X-Frame-Options", "DENY")
+		w.Header().Set("Cache-Control", "no-store")
+		w.Header().Set("X-XSS-Protection", "0")
+
+		// CORS: Origin検証してからヘッダーを設定
+		origin := r.Header.Get("Origin")
+		if origin == allowOrigin {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+			w.Header().Set("Vary", "Origin")
+		}
 
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusNoContent)

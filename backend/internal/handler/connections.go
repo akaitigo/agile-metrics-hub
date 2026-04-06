@@ -5,9 +5,20 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/akaitigo/agile-metrics-hub/internal/adapter"
 )
+
+// sanitizeLogValue はログインジェクション防止のため改行・制御文字を除去する。
+func sanitizeLogValue(s string) string {
+	r := strings.NewReplacer("\n", "", "\r", "", "\t", "")
+	result := r.Replace(s)
+	if len(result) > 64 {
+		result = result[:64]
+	}
+	return result
+}
 
 const maxRequestBodySize = 1 << 16 // 64KB
 
@@ -49,15 +60,17 @@ func (h *ConnectionsHandler) TestConnection(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	// ソース名をサニタイズ（ログインジェクション防止）
+	sanitizedSource := sanitizeLogValue(req.Source)
+
 	a, err := h.Registry.Create(req.Source, req.APIKey, req.Config)
 	if err != nil {
-		JSONError(w, http.StatusBadRequest, "unsupported source: "+req.Source)
+		JSONError(w, http.StatusBadRequest, "unsupported source")
 		return
 	}
 
 	if err := a.TestConnection(r.Context()); err != nil {
-		// エラーメッセージをサニタイズ: 内部情報を漏洩しない
-		log.Printf("connection test failed for source=%s: %v", req.Source, err)
+		log.Printf("connection test failed for source=%s: %v", sanitizedSource, err)
 		switch {
 		case errors.Is(err, adapter.ErrUnauthorized):
 			JSONError(w, http.StatusUnauthorized, "invalid credentials")
