@@ -55,6 +55,17 @@ func NewAdapter(apiToken string, config map[string]string) (adapter.PMToolAdapte
 	}, nil
 }
 
+// NewAdapterWithBaseURL はテスト用にbaseURLを差し替えたアダプターを生成する。
+func NewAdapterWithBaseURL(baseURL, email, apiToken string) *Adapter {
+	return &Adapter{
+		baseURL:          baseURL,
+		email:            email,
+		apiToken:         apiToken,
+		storyPointsField: "customfield_10016",
+		client:           &http.Client{Timeout: 5 * time.Second},
+	}
+}
+
 // validateBaseURL はSSRF防止のためbase_urlを検証する。
 func validateBaseURL(rawURL string) error {
 	parsed, err := url.Parse(rawURL)
