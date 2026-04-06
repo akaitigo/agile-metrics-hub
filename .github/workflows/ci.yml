@@ -47,7 +47,7 @@ jobs:
       - run: go mod tidy && git diff --exit-code go.mod
       - uses: golangci/golangci-lint-action@v6
         with:
-          version: latest
+          version: v1.64.5
           working-directory: backend
       - run: go test -v -race -count=1 ./...
       - run: go build -trimpath -ldflags "-s -w" ./cmd/server/

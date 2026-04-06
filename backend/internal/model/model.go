@@ -50,14 +50,16 @@ type TaskEvent struct {
 
 // Connection はPMツールへの接続情報。
 type Connection struct {
-	ID          string            `json:"id"`
-	Source      string            `json:"source"`
-	DisplayName string            `json:"display_name"`
-	APIKey      string            `json:"-"` // JSONに出力しない
-	Config      map[string]string `json:"config,omitempty"`
-	SyncStatus  string            `json:"sync_status"`
-	LastSynced  *time.Time        `json:"last_synced_at,omitempty"`
-	CreatedAt   time.Time         `json:"created_at"`
+	ID           string            `json:"id"`
+	Source       string            `json:"source"`
+	DisplayName  string            `json:"display_name"`
+	APIKey       string            `json:"-"`
+	Config       map[string]string `json:"config,omitempty"`
+	SyncStatus   string            `json:"sync_status"`
+	SyncError    *string           `json:"sync_error,omitempty"`
+	LastSyncedAt *time.Time        `json:"last_synced_at,omitempty"`
+	CreatedAt    time.Time         `json:"created_at"`
+	UpdatedAt    time.Time         `json:"updated_at"`
 }
 
 // BurndownPoint はバーンダウンチャートの1データポイント。
