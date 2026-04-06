@@ -7,12 +7,15 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 	"time"
 
 	"github.com/akaitigo/agile-metrics-hub/internal/adapter"
 	"github.com/akaitigo/agile-metrics-hub/internal/model"
 )
+
+var validFieldName = regexp.MustCompile(`^[a-zA-Z0-9_]+$`)
 
 const maxPaginationIterations = 500
 
@@ -39,6 +42,9 @@ func NewAdapter(apiToken string, config map[string]string) (adapter.PMToolAdapte
 	spField := config["story_points_field"]
 	if spField == "" {
 		spField = "customfield_10016"
+	}
+	if !validFieldName.MatchString(spField) {
+		return nil, fmt.Errorf("invalid story_points_field: %q", spField)
 	}
 	return &Adapter{
 		baseURL:          strings.TrimRight(baseURL, "/"),
