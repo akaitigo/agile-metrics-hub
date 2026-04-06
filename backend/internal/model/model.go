@@ -29,13 +29,14 @@ type Project struct {
 
 // Sprint はスプリントの統一モデル。
 type Sprint struct {
-	ID        string    `json:"id"`
-	Source    string    `json:"source"`
-	ProjectID string    `json:"project_id"`
-	Name      string    `json:"name"`
-	StartDate time.Time `json:"start_date"`
-	EndDate   time.Time `json:"end_date"`
-	Status    string    `json:"status"` // "active", "closed", "planned"
+	ID         string    `json:"id"`
+	ExternalID string    `json:"external_id"`
+	Source     string    `json:"source"`
+	ProjectID  string    `json:"project_id"`
+	Name       string    `json:"name"`
+	StartDate  time.Time `json:"start_date"`
+	EndDate    time.Time `json:"end_date"`
+	Status     string    `json:"status"` // "active", "closed", "planned"
 }
 
 // TaskEvent はタスクのステータス変更イベント。
