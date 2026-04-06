@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"math"
 	"time"
 
 	"github.com/akaitigo/agile-metrics-hub/internal/model"
@@ -25,10 +26,13 @@ func CalculateBurndown(snapshots []SnapshotData, sprintStart, sprintEnd time.Tim
 			idealRemaining = 0
 		}
 
+		remainingTasks := max(0, s.TotalTasks-s.CompletedTasks)
+		remainingPoints := math.Max(0, s.TotalPoints-s.CompletedPoints)
+
 		points = append(points, model.BurndownPoint{
 			Date:            s.Date,
-			RemainingTasks:  s.TotalTasks - s.CompletedTasks,
-			RemainingPoints: s.TotalPoints - s.CompletedPoints,
+			RemainingTasks:  remainingTasks,
+			RemainingPoints: remainingPoints,
 			IdealRemaining:  idealRemaining,
 		})
 	}
