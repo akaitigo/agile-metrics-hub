@@ -10,9 +10,9 @@
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "lint": "oxlint . && biome check .",
-    "lint:fix": "oxlint --fix . && biome check --write .",
-    "format": "biome format --write .",
+    "lint": "oxlint src/ && biome check src/",
+    "lint:fix": "oxlint --fix src/ && biome check --write src/",
+    "format": "biome format --write src/",
     "typecheck": "tsc --noEmit",
     "check": "pnpm format && pnpm lint && pnpm typecheck && pnpm test && pnpm build"
   },
@@ -35,5 +35,12 @@
   },
   "engines": {
     "node": ">=22.0.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@biomejs/biome",
+      "esbuild",
+      "sharp"
+    ]
   }
 }

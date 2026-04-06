@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -16,7 +16,9 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, `{"status":"ok"}`)
+		if _, err := io.WriteString(w, `{"status":"ok"}`); err != nil {
+			log.Printf("health check write failed: %v", err)
+		}
 	})
 
 	log.Printf("Agile Metrics Hub API listening on :%s", port)

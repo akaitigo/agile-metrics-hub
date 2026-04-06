@@ -44,3 +44,5 @@ pnpm-debug.log*
 # Misc
 *.log
 *.pid
+backend/server
+frontend/tsconfig.tsbuildinfo
