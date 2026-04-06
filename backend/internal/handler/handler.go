@@ -7,7 +7,7 @@ import (
 )
 
 // JSONResponse はJSON形式でレスポンスを返す。
-func JSONResponse(w http.ResponseWriter, status int, data interface{}) {
+func JSONResponse(w http.ResponseWriter, status int, data any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	if err := json.NewEncoder(w).Encode(data); err != nil {

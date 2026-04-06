@@ -68,7 +68,7 @@ func (h *MetricsHandler) Velocity(w http.ResponseWriter, r *http.Request) {
 
 	points := metrics.CalculateVelocity(sprints)
 	avg := metrics.AverageVelocity(sprints, count)
-	JSONResponse(w, http.StatusOK, map[string]interface{}{
+	JSONResponse(w, http.StatusOK, map[string]any{
 		"velocity":         points,
 		"average_velocity": avg,
 	})
