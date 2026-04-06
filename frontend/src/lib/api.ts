@@ -21,7 +21,8 @@ export async function fetchAPI<T>(path: string, options?: RequestInit): Promise<
 		throw new Error(message);
 	}
 
-	return res.json() as Promise<T>;
+	// 型の実行時検証はPhase 1でzod導入時に対応（ADR #004）
+	return (await res.json()) as T;
 }
 
 export async function testConnection(source: string, apiKey: string, config: Record<string, string>): Promise<void> {

@@ -20,7 +20,7 @@ export function VelocityChart({ data, averageVelocity }: Props) {
 			<h3 style={{ marginBottom: "0.5rem", fontWeight: 600 }}>
 				ベロシティ{" "}
 				<span style={{ fontWeight: 400, fontSize: "0.875rem", color: "#64748b" }}>
-					平均: {averageVelocity.toFixed(1)}pt
+					平均: {Number.isFinite(averageVelocity) ? averageVelocity.toFixed(1) : "--"}pt
 				</span>
 			</h3>
 			<ResponsiveContainer width="100%" height={300}>

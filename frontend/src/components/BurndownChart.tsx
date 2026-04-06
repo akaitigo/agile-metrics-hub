@@ -10,8 +10,8 @@ interface Props {
 export function BurndownChart({ data }: Props) {
 	const chartData = data.map((p) => ({
 		date: new Date(p.date).toLocaleDateString("ja-JP", { month: "short", day: "numeric" }),
-		残ポイント: Number(p.remaining_points.toFixed(1)),
-		理想線: Number(p.ideal_remaining.toFixed(1)),
+		残ポイント: Number((p.remaining_points ?? 0).toFixed(1)),
+		理想線: Number((p.ideal_remaining ?? 0).toFixed(1)),
 	}));
 
 	return (
