@@ -3,6 +3,7 @@ package clickup
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -234,10 +235,12 @@ func convertClickUpTask(ct clickupTask, projectID string) model.Task {
 	return task
 }
 
+// ErrSprintsNotSupported はClickUpスプリント未対応を示すエラー。
+// ClickUp API v2にはスプリント専用エンドポイントがないため、MVPでは未対応。
+var ErrSprintsNotSupported = errors.New("clickup sprints not supported in MVP: API v2 lacks dedicated sprint endpoints")
+
 func (a *Adapter) FetchSprints(_ context.Context, _ string) ([]model.Sprint, error) {
-	// ClickUp のスプリントはList-level機能。API v2ではスプリント専用エンドポイントは限定的。
-	// MVP段階ではスプリント取得は未対応。
-	return nil, nil
+	return nil, ErrSprintsNotSupported
 }
 
 // timeInStatusResponse はClickUp Time in Status APIのレスポンス。
