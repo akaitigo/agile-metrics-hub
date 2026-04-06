@@ -15,10 +15,11 @@ import (
 func sanitizeLogValue(s string) string {
 	r := strings.NewReplacer("\n", "", "\r", "", "\t", "")
 	result := r.Replace(s)
-	if len(result) > 64 {
-		result = result[:64]
+	runes := []rune(result)
+	if len(runes) > 64 {
+		runes = runes[:64]
 	}
-	return result
+	return string(runes)
 }
 
 const maxRequestBodySize = 1 << 16 // 64KB
