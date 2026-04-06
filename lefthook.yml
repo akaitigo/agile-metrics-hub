@@ -1,0 +1,21 @@
+pre-commit:
+  parallel: true
+  commands:
+    fe-lint:
+      root: frontend/
+      run: pnpm lint
+    be-lint:
+      root: backend/
+      run: golangci-lint run ./...
+    fe-format:
+      root: frontend/
+      run: pnpm format
+    be-format:
+      root: backend/
+      run: gofumpt -w .
+    fe-test:
+      root: frontend/
+      run: pnpm test
+    be-test:
+      root: backend/
+      run: go test -race -count=1 ./...
