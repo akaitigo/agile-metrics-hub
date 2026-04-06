@@ -50,8 +50,8 @@ func (h *ConnectionsHandler) TestConnection(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	if req.DisplayName == "" {
-		JSONError(w, http.StatusBadRequest, "display_name is required")
+	if req.DisplayName == "" || len(req.DisplayName) > 128 {
+		JSONError(w, http.StatusBadRequest, "display_name is required and must be 128 chars or less")
 		return
 	}
 

@@ -14,6 +14,8 @@ import (
 	"github.com/akaitigo/agile-metrics-hub/internal/model"
 )
 
+const maxPaginationIterations = 500
+
 // Adapter はJira Cloud REST API v3のアダプター実装。
 type Adapter struct {
 	baseURL          string
@@ -122,7 +124,7 @@ func (a *Adapter) FetchProjects(ctx context.Context) ([]model.Project, error) {
 	var projects []model.Project
 	startAt := 0
 
-	for {
+	for range maxPaginationIterations {
 		body, err := a.doRequest(ctx, http.MethodGet,
 			fmt.Sprintf("/rest/agile/1.0/board?startAt=%d&maxResults=50", startAt))
 		if err != nil {
@@ -190,7 +192,7 @@ func (a *Adapter) FetchTasks(ctx context.Context, projectID string) ([]model.Tas
 	var allTasks []model.Task
 	startAt := 0
 
-	for {
+	for range maxPaginationIterations {
 		body, err := a.doRequest(ctx, http.MethodGet,
 			fmt.Sprintf("/rest/agile/1.0/board/%s/issue?startAt=%d&maxResults=100&fields=summary,status,assignee,%s,priority,labels,created,updated,resolutiondate",
 				projectID, startAt, a.storyPointsField))
@@ -283,7 +285,7 @@ func (a *Adapter) FetchSprints(ctx context.Context, projectID string) ([]model.S
 	var sprints []model.Sprint
 	startAt := 0
 
-	for {
+	for range maxPaginationIterations {
 		body, err := a.doRequest(ctx, http.MethodGet,
 			fmt.Sprintf("/rest/agile/1.0/board/%s/sprint?startAt=%d&maxResults=50", projectID, startAt))
 		if err != nil {
@@ -347,7 +349,7 @@ func (a *Adapter) FetchTaskHistory(ctx context.Context, taskID string) ([]model.
 	var events []model.TaskEvent
 	startAt := 0
 
-	for {
+	for range maxPaginationIterations {
 		body, err := a.doRequest(ctx, http.MethodGet,
 			fmt.Sprintf("/rest/api/3/issue/%s/changelog?startAt=%d&maxResults=100", taskID, startAt))
 		if err != nil {

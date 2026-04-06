@@ -38,6 +38,9 @@ export function LeadTimeCard({ data }: Props) {
 }
 
 function formatHours(hours: number): string {
+	if (!Number.isFinite(hours) || hours < 0) {
+		return "--";
+	}
 	if (hours < 24) {
 		return `${hours.toFixed(0)}h`;
 	}

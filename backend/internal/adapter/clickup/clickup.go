@@ -165,9 +165,10 @@ type clickupTask struct {
 
 func (a *Adapter) FetchTasks(ctx context.Context, projectID string) ([]model.Task, error) {
 	var allTasks []model.Task
+	const maxPages = 500
 	page := 0
 
-	for {
+	for page < maxPages {
 		body, err := a.doRequest(ctx, http.MethodGet,
 			fmt.Sprintf("/list/%s/task?page=%d&include_closed=true&subtasks=true", projectID, page))
 		if err != nil {
