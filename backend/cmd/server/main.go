@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/akaitigo/agile-metrics-hub/internal/adapter"
 	"github.com/akaitigo/agile-metrics-hub/internal/adapter/clickup"
@@ -54,8 +55,18 @@ func main() {
 	// CORS middleware
 	corsHandler := corsMiddleware(mux, corsOrigin)
 
+	server := &http.Server{
+		Addr:              ":" + port,
+		Handler:           corsHandler,
+		ReadTimeout:       10 * time.Second,
+		ReadHeaderTimeout: 5 * time.Second,
+		WriteTimeout:      30 * time.Second,
+		IdleTimeout:       120 * time.Second,
+		MaxHeaderBytes:    1 << 20, // 1MB
+	}
+
 	log.Printf("Agile Metrics Hub API listening on :%s", port)
-	if err := http.ListenAndServe(":"+port, corsHandler); err != nil {
+	if err := server.ListenAndServe(); err != nil {
 		log.Fatalf("server failed: %v", err)
 	}
 }
