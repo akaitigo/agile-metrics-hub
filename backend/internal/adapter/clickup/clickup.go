@@ -13,12 +13,13 @@ import (
 	"github.com/akaitigo/agile-metrics-hub/internal/model"
 )
 
-const baseURL = "https://api.clickup.com/api/v2"
+const defaultBaseURL = "https://api.clickup.com/api/v2"
 
 // Adapter はClickUp API v2のアダプター実装。
 type Adapter struct {
-	apiKey string
-	client *http.Client
+	baseURL string
+	apiKey  string
+	client  *http.Client
 }
 
 // NewAdapter はClickUpアダプターを生成する。
@@ -27,15 +28,25 @@ func NewAdapter(apiKey string, _ map[string]string) (adapter.PMToolAdapter, erro
 		return nil, adapter.ErrUnauthorized
 	}
 	return &Adapter{
-		apiKey: apiKey,
-		client: &http.Client{Timeout: 30 * time.Second},
+		baseURL: defaultBaseURL,
+		apiKey:  apiKey,
+		client:  &http.Client{Timeout: 30 * time.Second},
 	}, nil
+}
+
+// NewAdapterWithBaseURL はテスト用にbaseURLを差し替えたアダプターを生成する。
+func NewAdapterWithBaseURL(apiKey, baseURL string) *Adapter {
+	return &Adapter{
+		baseURL: baseURL,
+		apiKey:  apiKey,
+		client:  &http.Client{Timeout: 5 * time.Second},
+	}
 }
 
 func (a *Adapter) Name() string { return "clickup" }
 
 func (a *Adapter) doRequest(ctx context.Context, method, path string) ([]byte, error) {
-	req, err := http.NewRequestWithContext(ctx, method, baseURL+path, nil)
+	req, err := http.NewRequestWithContext(ctx, method, a.baseURL+path, nil)
 	if err != nil {
 		return nil, fmt.Errorf("create request: %w", err)
 	}

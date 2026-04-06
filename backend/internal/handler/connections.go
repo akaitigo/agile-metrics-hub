@@ -5,11 +5,14 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"regexp"
 	"strings"
 	"unicode/utf8"
 
 	"github.com/akaitigo/agile-metrics-hub/internal/adapter"
 )
+
+var validSourceName = regexp.MustCompile(`^[a-zA-Z0-9_-]{1,64}$`)
 
 // sanitizeLogValue はログインジェクション防止のため改行・制御文字を除去する。
 func sanitizeLogValue(s string) string {
@@ -49,6 +52,11 @@ func (h *ConnectionsHandler) TestConnection(w http.ResponseWriter, r *http.Reque
 
 	if req.Source == "" || req.APIKey == "" {
 		JSONError(w, http.StatusBadRequest, "source and api_key are required")
+		return
+	}
+
+	if !validSourceName.MatchString(req.Source) {
+		JSONError(w, http.StatusBadRequest, "invalid source format")
 		return
 	}
 
