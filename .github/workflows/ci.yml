@@ -45,9 +45,9 @@ jobs:
           go-version-file: backend/go.mod
           cache: false
       - run: go mod tidy && git diff --exit-code go.mod
-      - uses: golangci/golangci-lint-action@v6
+      - uses: golangci/golangci-lint-action@v9
         with:
-          version: v1.64.5
+          version: v2.12.2
           working-directory: backend
       - run: go test -v -race -count=1 ./...
       - run: go build -trimpath -ldflags "-s -w" ./cmd/server/
