@@ -15,7 +15,7 @@
       "DOM",
       "DOM.Iterable"
     ],
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "incremental": true,
     "baseUrl": ".",
     "paths": {
@@ -40,7 +40,8 @@
     "src/**/*.tsx",
     ".next/types/**/*.ts",
     "test/**/*.ts",
-    "playwright.config.ts"
+    "playwright.config.ts",
+    ".next/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",
