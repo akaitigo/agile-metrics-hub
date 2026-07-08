@@ -1,7 +1,7 @@
 "use client";
 
-import type { CumulativeFlowPoint } from "@/types/metrics";
 import { Area, AreaChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import type { CumulativeFlowPoint } from "@/types/metrics";
 
 interface Props {
 	data: CumulativeFlowPoint[];
