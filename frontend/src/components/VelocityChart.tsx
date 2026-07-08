@@ -1,7 +1,7 @@
 "use client";
 
-import type { VelocityPoint } from "@/types/metrics";
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import type { VelocityPoint } from "@/types/metrics";
 
 interface Props {
 	data: VelocityPoint[];

@@ -1,7 +1,7 @@
 "use client";
 
-import type { BurndownPoint } from "@/types/metrics";
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import type { BurndownPoint } from "@/types/metrics";
 
 interface Props {
 	data: BurndownPoint[];
