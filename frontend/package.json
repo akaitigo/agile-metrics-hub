@@ -20,7 +20,7 @@
     "next": "^16.2.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "recharts": "^3.8.1"
+    "recharts": "^3.9.2"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.11",
