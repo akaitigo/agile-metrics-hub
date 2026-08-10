@@ -23,7 +23,7 @@
     "recharts": "^3.9.2"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.5",
+    "@biomejs/biome": "^2.5.7",
     "@playwright/test": "^1.62.1",
     "@types/node": "^25.6.0",
     "@types/react": "^19.2.18",
