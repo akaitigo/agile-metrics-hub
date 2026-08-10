@@ -19,7 +19,7 @@
   "dependencies": {
     "next": "^16.2.12",
     "react": "^19.2.8",
-    "react-dom": "^19.2.7",
+    "react-dom": "^19.2.8",
     "recharts": "^3.9.2"
   },
   "devDependencies": {
@@ -27,7 +27,7 @@
     "@playwright/test": "^1.62.1",
     "@types/node": "^25.6.0",
     "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.0.0",
+    "@types/react-dom": "^19.2.4",
     "@vitest/coverage-v8": "^2.1.0",
     "oxlint": "^1.59.0",
     "typescript": "^5.7.0",
